@@ -137,7 +137,8 @@ browser console:
 
 ### Local web console
 Choosing browser chat starts a local page at `http://127.0.0.1:8765/`, with
-session controls and response details:
+session controls and response details. Use **EXPORT** to save the current
+conversation as a Markdown file:
 
 ![SageCircuit Web Console](assets/web_console.png)
 

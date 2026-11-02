@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TenSeiAi</title>
-<meta name="description" content="TenSeiAi - local AI chat.">
+<title>SageCircuit</title>
+<meta name="description" content="SageCircuit - local AI chat.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23c9a44c' stroke-width='1.6' d='M12 2.5l7.5 2.8v6.2c0 4.9-3.2 9.1-7.5 10.3C7.7 20.6 4.5 16.4 4.5 11.5V5.3z'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -156,6 +156,12 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
   padding:4px 10px;border-radius:3px;font:500 10.5px var(--mono);cursor:pointer;transition:all .15s;
 }
 .btn-clear:hover{border-color:var(--bad);color:var(--bad)}
+.btn-export{
+  background:transparent;border:1px solid var(--line);color:var(--mut);
+  padding:4px 10px;border-radius:3px;font:500 10.5px var(--mono);cursor:pointer;transition:all .15s;
+}
+.btn-export:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.btn-export:disabled{opacity:.45;cursor:not-allowed}
 
 .chat-feed{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:18px}
 .msg-wrap{max-width:880px;width:100%;margin:0 auto;display:flex;flex-direction:column}
@@ -342,6 +348,7 @@ textarea.query-input::placeholder{color:var(--dim)}
   .top{padding:0 12px}
   .top-right{gap:8px}
   .status-pill{font-size:9px;padding:3px 7px}
+  .btn-export{font-size:9.5px;padding:4px 8px}
   .btn-clear{font-size:9.5px;padding:4px 8px}
   .code-block{border-radius:6px}
   .code-block pre{padding:11px 12px 13px;max-height:none;font-size:11.5px}
@@ -370,8 +377,8 @@ textarea.query-input::placeholder{color:var(--dim)}
         <svg class="ic" viewBox="0 0 24 24"><path d="M12 2.5l7.5 2.8v6.2c0 4.9-3.2 9.1-7.5 10.3C7.7 20.6 4.5 16.4 4.5 11.5V5.3z"/></svg>
       </span>
       <div>
-        <div class="side-name">TenSeiAi</div>
-        <div class="side-sub">TenSeiAi</div>
+        <div class="side-name">SageCircuit</div>
+        <div class="side-sub">LOCAL AI</div>
       </div>
       <button class="side-close" onclick="toggleSide(false)" aria-label="Close menu">
         <svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -413,10 +420,11 @@ textarea.query-input::placeholder{color:var(--dim)}
         <button class="menu-btn" id="menuBtn" onclick="toggleSide()" aria-label="Open menu" aria-expanded="false" aria-controls="sideDrawer">
           <svg class="ic" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <div class="crumb"><span class="sq"></span>TENSEI://<b>console</b></div>
+        <div class="crumb"><span class="sq"></span>SAGECIRCUIT://<b>console</b></div>
       </div>
       <div class="top-right">
         <span class="status-pill" id="statusPill"><span class="dot ok"></span>LOCAL :8765</span>
+        <button class="btn-export" id="exportBtn" type="button" onclick="exportCurrentChat()" disabled aria-label="Download current conversation as Markdown">EXPORT</button>
         <button class="btn-clear" onclick="clearCurrentChat()">CLEAR</button>
       </div>
     </header>
@@ -428,7 +436,7 @@ textarea.query-input::placeholder{color:var(--dim)}
     <div class="input-area">
       <div class="input-box">
         <span class="prompt-sym">&gt;</span>
-        <textarea id="queryInput" class="query-input" rows="1" placeholder="Ask anything to TenSeiAi" oninput="autoGrow(this)" onkeydown="checkKey(event)"></textarea>
+        <textarea id="queryInput" class="query-input" rows="1" placeholder="Ask anything to SageCircuit" oninput="autoGrow(this)" onkeydown="checkKey(event)"></textarea>
         <button class="btn-send" id="sendBtn" onclick="sendMessage()">
           <span>EXECUTE</span>
           <svg class="ic" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -546,14 +554,15 @@ function renderSide() {
 function renderFeed() {
   const feed = document.getElementById('chatFeed');
   const c = chats.find(x => x.id === activeId);
+  updateExportButton();
   if (!c || !c.msgs.length) {
     feed.innerHTML = `
       <div class="hero">
         <div class="hero-mark">
           <svg class="ic" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M12 2.5l7.5 2.8v6.2c0 4.9-3.2 9.1-7.5 10.3C7.7 20.6 4.5 16.4 4.5 11.5V5.3z"/></svg>
         </div>
-        <div class="hero-title">TenSeiAi</div>
-        <div class="hero-desc">Ask anything to TenSeiAi</div>
+        <div class="hero-title">SageCircuit</div>
+        <div class="hero-desc">Your local AI assistant. Start with a question.</div>
       </div>
     `;
     return;
@@ -593,7 +602,7 @@ function buildMessageDOM(m) {
 
     ai.innerHTML = `
       <div class="msg-ai-head">
-        <div class="ai-tag"><span class="sq"></span>TENSEI://AI</div>
+        <div class="ai-tag"><span class="sq"></span>SAGECIRCUIT://AI</div>
         <div class="ai-meta">
           <button class="btn-copy" onclick="copyText(this)">COPY</button>
         </div>
@@ -792,7 +801,7 @@ async function pollJob(id) {
     }
     await new Promise(resolve => setTimeout(resolve, 120));
   }
-  throw new Error('Timed out waiting for TenSeiAi.');
+  throw new Error('Timed out waiting for the local server.');
 }
 
 function copyToClipboard(text) {
@@ -912,13 +921,51 @@ async function sendMessage() {
   } catch(err) {
     pending.thinking = false;
     pending.took_s = null;
-    pending.text = '**Connection failed.** Could not reach the local TenSeiAi server. Start it with `python3 TenSeiAi.pyz` and try again.';
+    pending.text = '**Connection failed.** Could not reach the local SageCircuit server. Start it with `python3 TenSeiAi.pyz` and try again.';
   } finally {
     busy = false;
     document.getElementById('sendBtn').disabled = false;
     saveChats();
     renderFeed();
   }
+}
+
+function updateExportButton() {
+  const button = document.getElementById('exportBtn');
+  const chat = chats.find(x => x.id === activeId);
+  if (button) button.disabled = !chat || !Array.isArray(chat.msgs) || chat.msgs.length === 0;
+}
+
+function exportCurrentChat() {
+  const chat = chats.find(x => x.id === activeId);
+  if (!chat || !Array.isArray(chat.msgs) || chat.msgs.length === 0) return;
+
+  const title = String(chat.title || 'Chat session');
+  const lines = ['# ' + title, ''];
+  chat.msgs.forEach(message => {
+    if (!message || typeof message.text !== 'string' || !message.text.trim()) return;
+    lines.push(message.role === 'user' ? '## You' : '## SageCircuit', '', message.text.trim());
+    if (message.role !== 'user' && typeof message.took_s === 'number' &&
+        Number.isFinite(message.took_s) && message.took_s >= 0) {
+      lines.push('', '_Response time: ' + formatTook(message.took_s) + '_');
+    }
+    lines.push('', '---', '');
+  });
+
+  const markdown = lines.join('\n').replace(/\n{4,}/g, '\n\n\n').trim() + '\n';
+  const safeTitle = title.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase().slice(0, 48);
+  const filename = (safeTitle || 'sagecircuit-chat') + '-' +
+    new Date().toISOString().slice(0, 10) + '.md';
+  const url = URL.createObjectURL(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 async function updateStats() {
