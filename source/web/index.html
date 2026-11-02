@@ -5,31 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SageCircuit</title>
 <meta name="description" content="SageCircuit - local AI chat.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23c9a44c' stroke-width='1.6' d='M12 2.5l7.5 2.8v6.2c0 4.9-3.2 9.1-7.5 10.3C7.7 20.6 4.5 16.4 4.5 11.5V5.3z'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%2356c5b5' stroke-width='1.6' d='M12 2.5l7.5 2.8v6.2c0 4.9-3.2 9.1-7.5 10.3C7.7 20.6 4.5 16.4 4.5 11.5V5.3z'/%3E%3C/svg%3E">
+<script>
+try {
+  const savedTheme = localStorage.getItem('sagecircuit_theme');
+  document.documentElement.dataset.theme = savedTheme === 'light' ? 'light' : 'dark';
+} catch (error) {
+  console.warn('Could not load the saved theme preference.', error);
+  document.documentElement.dataset.theme = 'dark';
+}
+</script>
 <style>
 :root{
-  --bg:#0a0a0b;
-  --panel:#101012;
-  --panel-hi:#141417;
-  --input:#0c0c0e;
-  --ink:#e8e8ea;
-  --mut:#9d9da8;
-  --dim:#6b6b75;
-  --line:rgba(255,255,255,.075);
-  --line-2:rgba(255,255,255,.14);
-  --gold:#c9a44c;
-  --gold-soft:rgba(201,164,76,.14);
-  --gold-glow:rgba(201,164,76,.28);
-  --ok:#4cc38a;
-  --ok-soft:rgba(76,195,138,.12);
-  --bad:#e5484d;
-  --bad-soft:rgba(229,72,77,.12);
+  color-scheme:dark;
+  --bg:#0e1726;
+  --panel:#152236;
+  --panel-hi:#1c2b42;
+  --input:#111c2c;
+  --ink:#edf3fb;
+  --mut:#b2bfd0;
+  --dim:#8494a9;
+  --line:rgba(185,205,229,.1);
+  --line-2:rgba(185,205,229,.18);
+  --gold:#56c5b5;
+  --gold-soft:rgba(86,197,181,.14);
+  --gold-glow:rgba(86,197,181,.25);
+  --accent-rgb:86,197,181;
+  --ok:#58d6a0;
+  --ok-soft:rgba(88,214,160,.12);
+  --bad:#ed7279;
+  --bad-soft:rgba(237,114,121,.12);
+  --side-bg:#121d2c;
+  --quiet-bg:#101a29;
+  --code-bg:#0d1726;
+  --code-head:#142136;
+  --inline-code:#1c2a3e;
+  --scroll-thumb:rgba(185,205,229,.16);
+  --tok-k:#e4c879;
+  --tok-s:#95d5ae;
+  --tok-c:#8190a3;
+  --tok-n:#83ccdf;
   --mono:'IBM Plex Mono',ui-monospace,'Cascadia Mono',Menlo,Consolas,monospace;
   --sans:'IBM Plex Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
 }
 
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f4f7fb;
+  --panel:#ffffff;
+  --panel-hi:#e9f1f8;
+  --input:#ffffff;
+  --ink:#17283e;
+  --mut:#52667e;
+  --dim:#73849a;
+  --line:rgba(34,66,100,.1);
+  --line-2:rgba(34,66,100,.18);
+  --gold:#087f8c;
+  --gold-soft:rgba(8,127,140,.11);
+  --gold-glow:rgba(8,127,140,.2);
+  --accent-rgb:8,127,140;
+  --ok:#18875f;
+  --ok-soft:rgba(24,135,95,.1);
+  --bad:#c43e49;
+  --bad-soft:rgba(196,62,73,.1);
+  --side-bg:#eaf0f7;
+  --quiet-bg:#f6f8fb;
+  --code-bg:#f7f9fc;
+  --code-head:#eef3f8;
+  --inline-code:#e9eff6;
+  --scroll-thumb:rgba(34,66,100,.2);
+  --tok-k:#855800;
+  --tok-s:#28724c;
+  --tok-c:#718096;
+  --tok-n:#176b91;
+}
+
 *{box-sizing:border-box}
-html{color-scheme:dark;height:100%}
+html{height:100%}
 body{
   margin:0;height:100%;background:var(--bg);color:var(--ink);
   font:13.5px/1.55 var(--sans);
@@ -44,8 +96,8 @@ body::before{
 body::after{
   content:'';position:fixed;inset:-18%;z-index:0;pointer-events:none;
   background:
-    radial-gradient(circle at 72% 14%,rgba(201,164,76,.085),transparent 30%),
-    radial-gradient(circle at 16% 82%,rgba(76,195,138,.035),transparent 26%);
+    radial-gradient(circle at 72% 14%,rgba(var(--accent-rgb),.1),transparent 30%),
+    radial-gradient(circle at 16% 82%,rgba(var(--accent-rgb),.045),transparent 26%);
   animation:ambient 22s ease-in-out infinite alternate;
   will-change:transform;
 }
@@ -67,8 +119,8 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 
 ::-webkit-scrollbar{width:7px;height:7px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.09);border-radius:2px}
-::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--line-2)}
 
 .sq{display:inline-block;width:7px;height:7px;background:var(--gold);border-radius:1px;margin-right:8px;vertical-align:1px}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dim);margin-right:6px;vertical-align:middle}
@@ -78,7 +130,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 
 .side{
   width:260px;flex-shrink:0;height:100%;display:flex;flex-direction:column;
-  background:#0d0d0f;border-right:1px solid var(--line);
+  background:var(--side-bg);border-right:1px solid var(--line);
   transition:transform .28s cubic-bezier(.22,.8,.28,1);
   z-index:20;
 }
@@ -102,7 +154,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 .side-name{font:600 15px var(--sans);letter-spacing:-.01em;color:var(--ink)}
 .side-sub{font:500 9px var(--mono);letter-spacing:.14em;color:var(--dim);margin-top:2px}
 
-.side-telemetry{padding:14px 16px;border-bottom:1px solid var(--line);background:#0a0a0b}
+.side-telemetry{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--quiet-bg)}
 .tel-title{font:600 10px var(--mono);color:var(--dim);letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px}
 .tel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tel-card{background:var(--panel);border:1px solid var(--line);padding:8px 10px;border-radius:4px}
@@ -122,7 +174,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 .chat-row:hover .chat-del{opacity:1}
 .chat-del:hover{color:var(--bad)}
 
-.side-foot{padding:14px 16px;border-top:1px solid var(--line);background:#0a0a0b}
+.side-foot{padding:14px 16px;border-top:1px solid var(--line);background:var(--quiet-bg)}
 .btn-new{
   width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
   padding:8px 12px;background:var(--panel-hi);color:var(--ink);border:1px solid var(--line-2);
@@ -133,7 +185,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 .main{flex:1;display:flex;flex-direction:column;height:100%;background:var(--bg);overflow:hidden;position:relative}
 
 .top{
-  height:52px;flex-shrink:0;border-bottom:1px solid var(--line);background:#0d0d0f;
+  height:52px;flex-shrink:0;border-bottom:1px solid var(--line);background:var(--side-bg);
   display:flex;align-items:center;justify-content:space-between;padding:0 20px;
   position:relative;z-index:10;
   animation:topIn .42s cubic-bezier(.2,.7,.2,1) both;
@@ -147,6 +199,15 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 .crumb{font:500 10.5px var(--mono);color:var(--dim);letter-spacing:.16em;text-transform:uppercase}
 .crumb b{color:var(--gold)}
 .top-right{display:flex;align-items:center;gap:12px}
+.theme-toggle{
+  width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;
+  background:transparent;border:1px solid var(--line);border-radius:4px;color:var(--mut);
+  cursor:pointer;transition:color .15s,border-color .15s,background .15s;
+}
+.theme-toggle:hover{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.theme-icon{display:none}
+:root[data-theme="dark"] .theme-icon-sun,
+:root[data-theme="light"] .theme-icon-moon{display:block}
 .status-pill{
   font:500 10.5px var(--mono);color:var(--mut);border:1px solid var(--line);
   padding:3px 9px;border-radius:3px;display:flex;align-items:center;
@@ -179,7 +240,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 .msg-user-text{font-size:13.5px;color:var(--ink);white-space:pre-wrap;word-break:break-word}
 
 .msg-ai{
-  background:var(--panel);border:1px solid var(--line);border-left:3px solid rgba(201,164,76,.35);
+  background:var(--panel);border:1px solid var(--line);border-left:3px solid rgba(var(--accent-rgb),.48);
   border-radius:6px;padding:16px 20px;align-self:flex-start;width:100%;max-width:100%;
 }
 .msg-ai-head{
@@ -204,24 +265,24 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 .msg-body h1{font-size:16px;border-bottom:1px solid var(--line);padding-bottom:4px}
 .msg-body h2{font-size:15px}
 .msg-body h3{font-size:14px}
-.msg-body blockquote{margin:8px 0;padding:6px 14px;background:#0c0c0e;border-left:2px solid var(--gold);color:var(--mut)}
+.msg-body blockquote{margin:8px 0;padding:6px 14px;background:var(--code-bg);border-left:2px solid var(--gold);color:var(--mut)}
 
 .msg-body pre{
-  background:#0c0c0e;border:1px solid var(--line);border-radius:4px;padding:12px 14px;
+  background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:12px 14px;
   overflow-x:auto;font:12px/1.55 var(--mono);margin:10px 0;position:relative;
 }
-.msg-body code{font-family:var(--mono);font-size:12px;background:#141417;padding:1px 5px;border-radius:3px;border:1px solid var(--line)}
+.msg-body code{font-family:var(--mono);font-size:12px;background:var(--inline-code);padding:1px 5px;border-radius:3px;border:1px solid var(--line)}
 .msg-body pre code{background:transparent;padding:0;border:none}
 
 .code-block{
   margin:12px 0;border:1px solid var(--line-2);border-radius:8px;overflow:hidden;
-  background:#0b0b0d;box-shadow:0 10px 30px rgba(0,0,0,.22);
+  background:var(--code-bg);box-shadow:0 10px 30px rgba(12,28,48,.12);
   animation:codeIn .3s cubic-bezier(.2,.7,.2,1) both;
 }
 @keyframes codeIn{from{opacity:0;transform:translateY(5px) scale(.995)}to{opacity:1;transform:none}}
 .code-head{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:7px 9px 7px 12px;background:#111114;border-bottom:1px solid var(--line);
+  padding:7px 9px 7px 12px;background:var(--code-head);border-bottom:1px solid var(--line);
 }
 .code-lang{
   display:flex;align-items:center;gap:8px;min-width:0;
@@ -229,7 +290,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 }
 .code-lang::before{
   content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);
-  box-shadow:0 0 8px rgba(201,164,76,.55);flex-shrink:0;
+  box-shadow:0 0 8px rgba(var(--accent-rgb),.55);flex-shrink:0;
 }
 .code-copy{
   display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
@@ -247,13 +308,13 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
   max-height:480px;overflow:auto;font:12px/1.6 var(--mono);
 }
 .code-block pre code{font-size:12px;line-height:1.6}
-.tok-k{color:#d8b96a}
-.tok-s{color:#8fcf9b}
-.tok-c{color:#666672;font-style:italic}
-.tok-n{color:#79c7d8}
+.tok-k{color:var(--tok-k)}
+.tok-s{color:var(--tok-s)}
+.tok-c{color:var(--tok-c);font-style:italic}
+.tok-n{color:var(--tok-n)}
 
 .think-box{
-  background:#0c0c0e;border:1px solid var(--line);border-radius:4px;padding:10px 12px;
+  background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:10px 12px;
   margin-bottom:12px;font:11px/1.5 var(--mono);color:var(--dim);
 }
 .think-box.thinking{
@@ -262,7 +323,7 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
 }
 .think-box.thinking::after{
   content:'';position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(201,164,76,.07),transparent);
+  background:linear-gradient(90deg,transparent,rgba(var(--accent-rgb),.08),transparent);
   transform:translateX(-120%);animation:thinkScan 2.1s cubic-bezier(.4,0,.2,1) infinite;
 }
 @keyframes thinkScan{0%{transform:translateX(-120%)}55%,100%{transform:translateX(120%)}}
@@ -291,12 +352,12 @@ svg.ic{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke
   animation:markIn .65s cubic-bezier(.2,.8,.2,1) both,markGlow 4.4s ease-in-out 1s infinite;
 }
 @keyframes markIn{from{opacity:0;transform:scale(.82) rotate(-4deg)}to{opacity:1;transform:none}}
-@keyframes markGlow{0%,100%{box-shadow:0 0 0 rgba(201,164,76,0)}50%{box-shadow:0 0 22px rgba(201,164,76,.12)}}
+@keyframes markGlow{0%,100%{box-shadow:0 0 0 rgba(var(--accent-rgb),0)}50%{box-shadow:0 0 22px rgba(var(--accent-rgb),.12)}}
 .hero-title{font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 6px;color:var(--ink);animation:riseIn .45s .06s cubic-bezier(.2,.7,.2,1) both}
 .hero-desc{font-size:13.5px;color:var(--mut);max-width:540px;margin:0 auto 24px;animation:riseIn .45s .12s cubic-bezier(.2,.7,.2,1) both}
 
 .input-area{
-  padding:14px 20px 18px;background:#0d0d0f;border-top:1px solid var(--line);
+  padding:14px 20px 18px;background:var(--side-bg);border-top:1px solid var(--line);
   flex-shrink:0;position:relative;z-index:10;
   animation:inputIn .5s .08s cubic-bezier(.2,.7,.2,1) both;
 }
@@ -314,12 +375,12 @@ textarea.query-input{
 }
 textarea.query-input::placeholder{color:var(--dim)}
 .btn-send{
-  background:var(--gold);color:#0a0a0b;border:none;border-radius:4px;
+  background:var(--gold);color:#08202a;border:none;border-radius:4px;
   padding:6px 14px;font:600 11.5px var(--mono);letter-spacing:.04em;cursor:pointer;
   transition:opacity .15s,transform .16s,box-shadow .16s,background .16s;
   display:flex;align-items:center;gap:6px;
 }
-.btn-send:hover:not(:disabled){opacity:.94;transform:translateY(-1px);box-shadow:0 5px 16px rgba(201,164,76,.2)}
+.btn-send:hover:not(:disabled){opacity:.94;transform:translateY(-1px);box-shadow:0 5px 16px rgba(var(--accent-rgb),.2)}
 .btn-send:active:not(:disabled){transform:translateY(0) scale(.975)}
 .btn-send:disabled{background:var(--line-2);color:var(--dim);cursor:not-allowed;box-shadow:none}
 
@@ -424,6 +485,10 @@ textarea.query-input::placeholder{color:var(--dim)}
       </div>
       <div class="top-right">
         <span class="status-pill" id="statusPill"><span class="dot ok"></span>LOCAL :8765</span>
+        <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch to light mode" title="Switch to light mode">
+          <svg class="ic theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+          <svg class="ic theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1z"/></svg>
+        </button>
         <button class="btn-export" id="exportBtn" type="button" onclick="exportCurrentChat()" disabled aria-label="Download current conversation as Markdown">EXPORT</button>
         <button class="btn-clear" type="button" aria-label="Clear current conversation" onclick="clearCurrentChat()">CLEAR</button>
       </div>
@@ -453,6 +518,27 @@ textarea.query-input::placeholder{color:var(--dim)}
 let chats = [];
 let activeId = null;
 let busy = false;
+
+function updateThemeButton() {
+  const button = document.getElementById('themeToggle');
+  if (!button) return;
+  const label = document.documentElement.dataset.theme === 'dark'
+    ? 'Switch to light mode'
+    : 'Switch to dark mode';
+  button.setAttribute('aria-label', label);
+  button.title = label;
+}
+
+function toggleTheme() {
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  try {
+    localStorage.setItem('sagecircuit_theme', theme);
+  } catch (error) {
+    console.warn('Could not save the theme preference.', error);
+  }
+  updateThemeButton();
+}
 
 function loadChats() {
   try {
@@ -995,6 +1081,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.onload = () => {
+  updateThemeButton();
   loadChats();
   renderSide();
   renderFeed();
