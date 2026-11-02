@@ -26,6 +26,14 @@ python TenSeiAi.pyz serve --port 8765
 | `GET` | `/v1/models` | OpenAI-style model list |
 | `POST` | `/v1/chat/completions` | OpenAI-compatible chat completion |
 
+## Request format and size
+
+POST requests must contain valid JSON with an object at the top level. Bodies
+are limited to 1 MiB. Question prompts and the `content` of a user message
+must be strings. Invalid JSON or field types receive a `400` response; a body
+over the limit receives `413`. Error responses include an `error` field with
+the reason.
+
 ## Submit a question
 
 Wait for an answer in the same request:

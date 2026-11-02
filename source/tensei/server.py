@@ -8,6 +8,13 @@ from urllib.parse import parse_qs, urlparse
 from . import config
 
 APP = None
+MAX_REQUEST_BYTES = 1024 * 1024
+
+
+class RequestError(ValueError):
+    def __init__(self, message, status=400):
+        super().__init__(message)
+        self.status = status
 
 class App:
     def __init__(self):
@@ -88,11 +95,31 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _read_json(self):
-        try:
-            n = int(self.headers.get("Content-Length") or 0)
-            return json.loads(self.rfile.read(n) or b"{}")
-        except Exception:
+        if self.headers.get("Transfer-Encoding"):
+            raise RequestError("Transfer-Encoding is not supported")
+        raw_length = self.headers.get("Content-Length")
+        if raw_length is None:
             return {}
+        try:
+            length = int(raw_length)
+        except ValueError as exc:
+            raise RequestError("invalid Content-Length") from exc
+        if length < 0:
+            raise RequestError("invalid Content-Length")
+        if length > MAX_REQUEST_BYTES:
+            raise RequestError("request body is too large", 413)
+        if length == 0:
+            return {}
+        body = self.rfile.read(length)
+        if len(body) != length:
+            raise RequestError("incomplete request body")
+        try:
+            payload = json.loads(body)
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise RequestError("malformed JSON body") from exc
+        if not isinstance(payload, dict):
+            raise RequestError("JSON body must be an object")
+        return payload
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -149,9 +176,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urlparse(self.path)
-        d = self._read_json()
+        try:
+            d = self._read_json()
+        except RequestError as exc:
+            self.close_connection = True
+            self._json({"error": str(exc)}, exc.status)
+            return
         if u.path == "/api/ask":
-            q = (d.get("q") or d.get("question") or "").strip()
+            q = d.get("q") or d.get("question") or ""
+            if not isinstance(q, str):
+                self._json({"error": "question must be a string"}, 400)
+                return
+            q = q.strip()
             if not q:
                 self._json({"error": "empty question"}, 400)
                 return
@@ -196,16 +232,29 @@ class Handler(BaseHTTPRequestHandler):
                 daemon=True).start()
             self._json({"ok": True, "started": True})
         elif u.path == "/v1/chat/completions":
-            msgs = d.get("messages") or []
+            msgs = d.get("messages")
+            if not isinstance(msgs, list):
+                self._json({"error": {"message": "messages must be an array"}}, 400)
+                return
             q = ""
             for m in reversed(msgs):
+                if not isinstance(m, dict):
+                    self._json({"error": {"message": "each message must be an object"}}, 400)
+                    return
                 if m.get("role") == "user":
-                    q = m.get("content") or ""
+                    q = m.get("content")
+                    if not isinstance(q, str):
+                        self._json({"error": {"message": "user message content must be a string"}}, 400)
+                        return
                     break
             if not q:
                 self._json({"error": {"message": "no user message"}}, 400)
                 return
-            res = APP.thinker.ask(q)
+            try:
+                res = APP.thinker.ask(q)
+            except Exception:
+                self._json({"error": {"message": "internal server error"}}, 500)
+                return
             self._json({
                 "id": "chatcmpl-" + uuid.uuid4().hex[:20],
                 "object": "chat.completion",
