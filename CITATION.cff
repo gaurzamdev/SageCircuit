@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "For work that uses SageCircuit, please reference this project."
+title: "SageCircuit: a locally operated AI system"
+version: "8.1.0"
+date-released: "2026-10-20"
+license: MIT
+repository-code: "https://github.com/gaurzamdev/SageCircuit"
+keywords:
+  - local-ai
+  - from-scratch
+  - transformer
+  - mixture-of-experts
+  - retrieval
+  - sqlite
+  - python
+authors:
+  - name: "Koustubh Gaikwad"
+    alias: "Koustubh12345"
+abstract: >-
+  SageCircuit is a self-contained AI application for local use. It combines a
+  compact Transformer/Mixture-of-Experts language component with retrieval
+  from a SQLite knowledge store, deterministic solvers, a local browser chat,
+  and an OpenAI-compatible API. It does not depend on Llama, GGUF, or
+  pretrained weights.
