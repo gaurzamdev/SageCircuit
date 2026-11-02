@@ -425,7 +425,7 @@ textarea.query-input::placeholder{color:var(--dim)}
       <div class="top-right">
         <span class="status-pill" id="statusPill"><span class="dot ok"></span>LOCAL :8765</span>
         <button class="btn-export" id="exportBtn" type="button" onclick="exportCurrentChat()" disabled aria-label="Download current conversation as Markdown">EXPORT</button>
-        <button class="btn-clear" onclick="clearCurrentChat()">CLEAR</button>
+        <button class="btn-clear" type="button" aria-label="Clear current conversation" onclick="clearCurrentChat()">CLEAR</button>
       </div>
     </header>
 
@@ -486,11 +486,11 @@ function newChat(renderNow = true) {
 
 function clearCurrentChat() {
   const c = chats.find(x => x.id === activeId);
-  if (c) {
-    c.msgs = [];
-    saveChats();
-    renderFeed();
-  }
+  if (!c || !c.msgs.length) return;
+  if (!window.confirm('Clear all messages in this conversation? This cannot be undone.')) return;
+  c.msgs = [];
+  saveChats();
+  renderFeed();
 }
 
 function deleteChat(id, e) {
